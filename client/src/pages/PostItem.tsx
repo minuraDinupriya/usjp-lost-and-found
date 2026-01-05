@@ -1,20 +1,22 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ItemType, ILostFoundItem } from '../types';
+import { ItemType } from '../types';
 
 const PostItem: React.FC = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<Partial<ILostFoundItem>>({
+  
+  // We keep track of the file separately
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const [formData, setFormData] = useState({
     type: ItemType.LOST,
     category: '',
     title: '',
     description: '',
     location: '',
     date: '',
-    contactNumber: '',
-    imageUrl: ''
+    contactNumber: '', // Backend expects 'contact', we will map this later
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -22,25 +24,46 @@ const PostItem: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Special handler just for the file input
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // In a real project: await axios.post('http://localhost:5000/api/items', formData);
-      
-      // Simulated persistence for demo
-      const existingItems = JSON.parse(localStorage.getItem('usjp_items') || '[]');
-      const newItem = {
-        ...formData,
-        _id: Date.now().toString(),
-        createdAt: new Date().toISOString()
-      };
-      localStorage.setItem('usjp_items', JSON.stringify([newItem, ...existingItems]));
+      // 1. Create a FormData object (Required for sending files)
+      const data = new FormData();
+      data.append('type', formData.type);
+      data.append('category', formData.category);
+      data.append('title', formData.title);
+      data.append('description', formData.description);
+      data.append('location', formData.location);
+      data.append('date', formData.date);
+      data.append('contact', formData.contactNumber); // Mapping contactNumber -> contact
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert('Item reported successfully!');
-      navigate('/');
+      // 2. Add the file if the user picked one
+      if (selectedFile) {
+        data.append('image', selectedFile);
+      }
+
+      // 3. Send to your Backend
+      const response = await fetch('http://localhost:5000/api/items', {
+        method: 'POST',
+        body: data, // No 'Content-Type' header needed; browser sets it automatically for FormData
+      });
+
+      if (response.ok) {
+        alert('Item reported successfully!');
+        navigate('/'); // Go back home
+      } else {
+        alert('Failed to save item. Server error.');
+      }
+
     } catch (error) {
       console.error("Submission failed:", error);
       alert('Failed to report item. Please try again.');
@@ -60,6 +83,7 @@ const PostItem: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Status Radio Buttons */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-gray-700">Status</label>
@@ -171,15 +195,14 @@ const PostItem: React.FC = () => {
               />
             </div>
 
+            {/* --- NEW FILE INPUT SECTION --- */}
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">Image URL (Optional)</label>
+              <label className="text-sm font-semibold text-gray-700">Upload Image</label>
               <input
-                type="url"
-                name="imageUrl"
-                placeholder="https://example.com/image.jpg"
-                value={formData.imageUrl}
-                onChange={handleChange}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800000]/20 focus:border-[#800000] transition-all"
+                type="file"
+                accept="image/*" // Only allow image files
+                onChange={handleFileChange}
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800000]/20 focus:border-[#800000] transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#800000]/10 file:text-[#800000] hover:file:bg-[#800000]/20"
               />
             </div>
           </div>

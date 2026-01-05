@@ -1,68 +1,24 @@
-
 import React, { useState, useEffect } from 'react';
 import { ILostFoundItem, ItemType } from '../types';
-
-// Mock data for initial demonstration if backend is not connected
-const MOCK_ITEMS: ILostFoundItem[] = [
-  {
-    _id: '1',
-    title: 'Silver Casio Watch',
-    description: 'Found near the main library entrance. It has a blue face.',
-    type: ItemType.FOUND,
-    category: 'Electronics',
-    location: 'Main Library',
-    date: '2024-05-15',
-    contactNumber: '0712345678',
-    imageUrl: 'https://picsum.photos/400/300?random=1',
-    createdAt: new Date().toISOString()
-  },
-  {
-    _id: '2',
-    title: 'Red Backpack',
-    description: 'Contains a laptop and several notebooks. Lost near the canteen.',
-    type: ItemType.LOST,
-    category: 'Bags',
-    location: 'Science Faculty Canteen',
-    date: '2024-05-14',
-    contactNumber: '0778899001',
-    imageUrl: 'https://picsum.photos/400/300?random=2',
-    createdAt: new Date().toISOString()
-  },
-  {
-    _id: '3',
-    title: 'Car Keys',
-    description: 'Toyota keys found in the parking lot.',
-    type: ItemType.FOUND,
-    category: 'Miscellaneous',
-    location: 'Faculty Parking',
-    date: '2024-05-16',
-    contactNumber: '0701122334',
-    imageUrl: 'https://picsum.photos/400/300?random=3',
-    createdAt: new Date().toISOString()
-  }
-];
 
 const Home: React.FC = () => {
   const [items, setItems] = useState<ILostFoundItem[]>([]);
   const [filter, setFilter] = useState<'All' | ItemType>('All');
   const [loading, setLoading] = useState(true);
 
+  // --- NEW: Fetch Real Data from Server ---
   useEffect(() => {
-    // In a real project, this would fetch from http://localhost:5000/api/items
-    // We simulate a fetch here
     const fetchItems = async () => {
       setLoading(true);
       try {
-        // Simulating API latency
-        await new Promise(resolve => setTimeout(resolve, 800));
+        // 1. Call the API we built
+        const response = await fetch('http://localhost:5000/api/items');
         
-        // Try fetching from local storage first (simulated persistent storage for the demo)
-        const stored = localStorage.getItem('usjp_items');
-        if (stored) {
-          setItems([...JSON.parse(stored), ...MOCK_ITEMS]);
-        } else {
-          setItems(MOCK_ITEMS);
-        }
+        // 2. Get the JSON data
+        const data = await response.json();
+        
+        // 3. Save it to state
+        setItems(data);
       } catch (error) {
         console.error("Failed to fetch items:", error);
       } finally {
@@ -117,6 +73,9 @@ const Home: React.FC = () => {
               className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group"
             >
               <div className="relative h-48 overflow-hidden">
+                {/* If the image is a full URL (uploaded file), it uses that.
+                   If no image exists, it falls back to a random placeholder.
+                */}
                 <img 
                   src={item.imageUrl || 'https://picsum.photos/400/300?random=0'} 
                   alt={item.title}
