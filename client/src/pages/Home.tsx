@@ -7,10 +7,11 @@ const Home: React.FC = () => {
   const [filter, setFilter] = useState<'All' | ItemType>('All');
   const [loading, setLoading] = useState(true);
   
-  // Initialize navigation hook
+  // 1. NEW: State for Search Query
+  const [searchQuery, setSearchQuery] = useState('');
+
   const navigate = useNavigate();
 
-  // 1. Fetch Data Function
   const fetchItems = async () => {
     setLoading(true);
     try {
@@ -28,10 +29,8 @@ const Home: React.FC = () => {
     fetchItems();
   }, []);
 
-  // 2. Delete Function
   const handleDelete = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Stop click from bubbling
-    
+    e.stopPropagation();
     if (!window.confirm("Are you sure you want to delete this item?")) return;
 
     try {
@@ -50,22 +49,44 @@ const Home: React.FC = () => {
     }
   };
 
-  const filteredItems = filter === 'All' 
-    ? items 
-    : items.filter(item => item.type === filter);
+  // 2. UPDATED: Smart Filtering Logic
+  // It checks: Does the item match the Category? AND Does it match the Search Text?
+  const filteredItems = items.filter(item => {
+    const matchesCategory = filter === 'All' || item.type === filter;
+    const matchesSearch = 
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.location.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <div className="space-y-8 animate-fadeIn">
-      <header className="text-center space-y-2">
+      <header className="text-center space-y-4">
         <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
           Recently <span className="text-[#800000]">Lost & Found</span>
         </h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           A dedicated portal for the USJP community to help reconnect lost belongings with their owners.
         </p>
+
+        {/* 3. NEW: Search Bar */}
+        <div className="max-w-md mx-auto mt-6 relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <i className="fas fa-search text-gray-400"></i>
+          </div>
+          <input
+            type="text"
+            placeholder="Search for items, locations, or descriptions..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#800000] focus:border-[#800000] sm:text-sm shadow-sm transition-all"
+          />
+        </div>
       </header>
 
-      {/* Filter Bar */}
+      {/* Filter Buttons */}
       <div className="flex flex-wrap justify-center gap-3">
         {(['All', ItemType.LOST, ItemType.FOUND] as const).map((type) => (
           <button
@@ -113,9 +134,8 @@ const Home: React.FC = () => {
                     <span className="text-xs font-semibold text-gray-400 uppercase">{item.category}</span>
                   </div>
                   
-                  {/* --- BUTTON GROUP --- */}
+                  {/* Button Group */}
                   <div className="flex">
-                    {/* NEW: Edit Button */}
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
@@ -127,7 +147,6 @@ const Home: React.FC = () => {
                       <i className="fas fa-pen"></i>
                     </button>
 
-                    {/* Delete Button */}
                     <button 
                       onClick={(e) => handleDelete(item._id, e)}
                       className="text-gray-400 hover:text-red-600 transition-colors p-1 bg-gray-50 rounded-full h-8 w-8 flex items-center justify-center hover:bg-red-50"
@@ -162,9 +181,9 @@ const Home: React.FC = () => {
         </div>
       ) : (
         <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
-          <i className="fas fa-box-open text-5xl text-gray-300 mb-4"></i>
-          <h3 className="text-xl font-medium text-gray-500">No items found in this category</h3>
-          <p className="text-gray-400 mt-1">Be the first to report something!</p>
+          <i className="fas fa-search text-5xl text-gray-300 mb-4"></i>
+          <h3 className="text-xl font-medium text-gray-500">No matching items found</h3>
+          <p className="text-gray-400 mt-1">Try adjusting your search or filters.</p>
         </div>
       )}
     </div>
