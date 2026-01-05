@@ -248,40 +248,55 @@ const Home: React.FC = () => {
                     <span className="ml-2">{item.date}</span>
                   </div>
 
-                  {/* CONTACT INFO */}
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    {/* WhatsApp Button */}
-                    <a 
-                      href={`https://wa.me/${formatPhoneNumber(item.contactNumber)}`}
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="col-span-1 flex items-center justify-center py-2 bg-[#25D366] text-white rounded-lg hover:bg-[#1da851] text-xs font-bold gap-1 shadow-sm"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <i className="fab fa-whatsapp text-sm"></i>
-                      <span>WhatsApp</span>
-                    </a>
-
-                    {/* Live Chat Button (Only for Logged In users) */}
+                  {/* CONTACT INFO (Privacy Protected) */}
+                  <div className="mt-3 space-y-2">
+                    
                     {isLoggedIn ? (
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/chat/${item._id}`);
-                        }}
-                        className="col-span-1 flex items-center justify-center py-2 bg-[#800000] text-white rounded-lg hover:bg-[#600000] text-xs font-bold gap-1 shadow-sm"
-                      >
-                        <i className="fas fa-comments text-sm"></i>
-                        <span>Live Chat</span>
-                      </button>
+                      /* --- VIEW FOR LOGGED-IN USERS (Full Access) --- */
+                      <>
+                        <div className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg border border-gray-100 select-all">
+                          <div className="flex items-center">
+                            <i className="fas fa-phone-alt w-4 text-gray-400"></i>
+                            <span className="ml-2 font-bold text-gray-700 text-sm">
+                              {item.contactNumber}
+                            </span>
+                          </div>
+                          <span className="text-[10px] uppercase font-semibold text-gray-400">Call</span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                            <a 
+                              href={`https://wa.me/${formatPhoneNumber(item.contactNumber)}`}
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="col-span-1 flex items-center justify-center py-2 bg-[#25D366] text-white rounded-lg hover:bg-[#1da851] text-xs font-bold gap-1 shadow-sm"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <i className="fab fa-whatsapp text-sm"></i>
+                              <span>WhatsApp</span>
+                            </a>
+
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/chat/${item._id}`);
+                              }}
+                              className="col-span-1 flex items-center justify-center py-2 bg-[#800000] text-white rounded-lg hover:bg-[#600000] text-xs font-bold gap-1 shadow-sm"
+                            >
+                              <i className="fas fa-comments text-sm"></i>
+                              <span>Live Chat</span>
+                            </button>
+                        </div>
+                      </>
                     ) : (
-                      <button 
-                         disabled
-                         className="col-span-1 flex items-center justify-center py-2 bg-gray-200 text-gray-400 rounded-lg text-xs font-bold gap-1 cursor-not-allowed"
-                      >
-                        <i className="fas fa-lock text-sm"></i>
-                        <span>Login to Chat</span>
-                      </button>
+                      /* --- VIEW FOR GUESTS (Hidden Details) --- */
+                      <div className="bg-gray-100 rounded-lg p-3 text-center border border-gray-200">
+                        <div className="flex flex-col items-center gap-1">
+                          <i className="fas fa-lock text-gray-400 text-xl mb-1"></i>
+                          <p className="text-xs font-semibold text-gray-500">Contact details hidden</p>
+                          <p className="text-[10px] text-gray-400">Please login to view phone & chat</p>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
