@@ -32,17 +32,17 @@ const Navbar: React.FC = () => {
   return (
     <nav className="bg-[#800000] text-white shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        {/* Logo */}
-        <Link to="/" className="flex items-center space-x-2 text-xl font-bold hover:text-gray-200 transition-colors">
+        
+        {/* LOGO: Uses <a href> to force a full refresh (Resets filters) */}
+        <a href="/" className="flex items-center space-x-2 text-xl font-bold hover:text-gray-200 transition-colors">
           <i className="fas fa-search-location text-[#FFD700]"></i>
           <span>USJP <span className="text-[#FFD700]">Lost & Found</span></span>
-        </Link>
+        </a>
 
         {/* Buttons */}
         <div className="flex items-center space-x-4">
-          <Link to="/" className="text-white/90 hover:text-white font-medium transition-colors">
-            Browse Items
-          </Link>
+          
+          {/* REMOVED "Browse Items" BUTTON HERE */}
 
           {isLoggedIn ? (
             // --- VIEW FOR LOGGED IN USERS ---
