@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ILostFoundItem, ItemType } from '../types';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 const Home: React.FC = () => {
   const [items, setItems] = useState<ILostFoundItem[]>([]);
@@ -29,23 +30,43 @@ const Home: React.FC = () => {
     fetchItems();
   }, []);
 
+// 2. Delete Function (Now with SweetAlert!)
   const handleDelete = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!window.confirm("Are you sure you want to delete this item?")) return;
+    e.stopPropagation(); 
+    
+    // Show the custom confirmation popup
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#800000', // Matches your theme color
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!'
+    });
 
-    try {
-      const response = await fetch(`http://localhost:5000/api/items/${id}`, {
-        method: 'DELETE',
-      });
+    // If user clicked "Yes"
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`http://localhost:5000/api/items/${id}`, {
+          method: 'DELETE',
+        });
 
-      if (response.ok) {
-        setItems(prevItems => prevItems.filter(item => item._id !== id));
-        alert("Item deleted!");
-      } else {
-        alert("Failed to delete item.");
+        if (response.ok) {
+          setItems(prevItems => prevItems.filter(item => item._id !== id));
+          // Success Popup
+          Swal.fire(
+            'Deleted!',
+            'Your item has been deleted.',
+            'success'
+          );
+        } else {
+          Swal.fire('Error', 'Failed to delete item.', 'error');
+        }
+      } catch (error) {
+        console.error("Error deleting:", error);
+        Swal.fire('Error', 'Something went wrong.', 'error');
       }
-    } catch (error) {
-      console.error("Error deleting:", error);
     }
   };
 
