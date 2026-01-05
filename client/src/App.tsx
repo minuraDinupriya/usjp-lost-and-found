@@ -14,6 +14,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/post" element={<PostItem />} />
+            <Route path="/edit/:id" element={<PostItem />} />
           </Routes>
         </main>
         <footer className="bg-white border-t py-6 text-center text-gray-500 text-sm">

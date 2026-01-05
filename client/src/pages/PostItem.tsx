@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ItemType } from '../types';
 
 const PostItem: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams(); // Check URL for ID
+  const isEditing = Boolean(id); // True if we are editing
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // We keep track of the file separately
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [formData, setFormData] = useState({
@@ -16,15 +17,42 @@ const PostItem: React.FC = () => {
     description: '',
     location: '',
     date: '',
-    contactNumber: '', // Backend expects 'contact', we will map this later
+    contactNumber: '',
   });
+
+  // If editing, fetch the existing data
+  useEffect(() => {
+    if (isEditing) {
+      const fetchItem = async () => {
+        try {
+          const response = await fetch(`http://localhost:5000/api/items`);
+          const data = await response.json();
+          const item = data.find((i: any) => i._id === id);
+          
+          if (item) {
+            setFormData({
+              type: item.type,
+              category: item.category,
+              title: item.title,
+              description: item.description,
+              location: item.location,
+              date: item.date,
+              contactNumber: item.contactNumber,
+            });
+          }
+        } catch (error) {
+          console.error("Failed to load item", error);
+        }
+      };
+      fetchItem();
+    }
+  }, [id, isEditing]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Special handler just for the file input
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
@@ -36,7 +64,6 @@ const PostItem: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // 1. Create a FormData object (Required for sending files)
       const data = new FormData();
       data.append('type', formData.type);
       data.append('category', formData.category);
@@ -44,29 +71,34 @@ const PostItem: React.FC = () => {
       data.append('description', formData.description);
       data.append('location', formData.location);
       data.append('date', formData.date);
-      data.append('contact', formData.contactNumber); // Mapping contactNumber -> contact
+      data.append('contact', formData.contactNumber);
 
-      // 2. Add the file if the user picked one
       if (selectedFile) {
         data.append('image', selectedFile);
       }
 
-      // 3. Send to your Backend
-      const response = await fetch('http://localhost:5000/api/items', {
-        method: 'POST',
-        body: data, // No 'Content-Type' header needed; browser sets it automatically for FormData
+      // DECISION: Are we Creating (POST) or Updating (PUT)?
+      const url = isEditing 
+        ? `http://localhost:5000/api/items/${id}` 
+        : 'http://localhost:5000/api/items';
+      
+      const method = isEditing ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
+        body: data,
       });
 
       if (response.ok) {
-        alert('Item reported successfully!');
-        navigate('/'); // Go back home
+        alert(isEditing ? 'Item updated!' : 'Item reported!');
+        navigate('/');
       } else {
-        alert('Failed to save item. Server error.');
+        alert('Failed to save. Server error.');
       }
 
     } catch (error) {
-      console.error("Submission failed:", error);
-      alert('Failed to report item. Please try again.');
+      console.error("Error:", error);
+      alert('Error submitting form.');
     } finally {
       setIsSubmitting(false);
     }
@@ -78,153 +110,77 @@ const PostItem: React.FC = () => {
     <div className="max-w-2xl mx-auto animate-fadeIn">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="bg-[#800000] px-6 py-4">
-          <h2 className="text-xl font-bold text-[#FFD700]">Report Lost or Found Item</h2>
-          <p className="text-maroon-100 text-sm opacity-90 text-white">Fill out the details below to help someone find their item.</p>
+          <h2 className="text-xl font-bold text-[#FFD700]">
+            {isEditing ? 'Edit Item Details' : 'Report Lost or Found Item'}
+          </h2>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Status Radio Buttons */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">Status</label>
-              <div className="flex gap-4">
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="type"
-                    value={ItemType.LOST}
-                    checked={formData.type === ItemType.LOST}
-                    onChange={handleChange}
-                    className="w-4 h-4 text-[#800000] focus:ring-[#800000]"
-                  />
-                  <span className="text-sm">Lost Item</span>
-                </label>
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="type"
-                    value={ItemType.FOUND}
-                    checked={formData.type === ItemType.FOUND}
-                    onChange={handleChange}
-                    className="w-4 h-4 text-[#800000] focus:ring-[#800000]"
-                  />
-                  <span className="text-sm">Found Item</span>
-                </label>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">Category</label>
-              <select
-                name="category"
-                required
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800000]/20 focus:border-[#800000] transition-all"
-              >
-                <option value="">Select Category</option>
-                {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-              </select>
+          {/* Status */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold text-gray-700">Status</label>
+            <div className="flex gap-4">
+              <label className="flex items-center space-x-2">
+                <input type="radio" name="type" value={ItemType.LOST} checked={formData.type === ItemType.LOST} onChange={handleChange} />
+                <span>Lost Item</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input type="radio" name="type" value={ItemType.FOUND} checked={formData.type === ItemType.FOUND} onChange={handleChange} />
+                <span>Found Item</span>
+              </label>
             </div>
           </div>
 
+          {/* Category */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold text-gray-700">Category</label>
+            <select name="category" required value={formData.category} onChange={handleChange} className="w-full px-3 py-2 bg-gray-50 border rounded-lg">
+              <option value="">Select Category</option>
+              {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            </select>
+          </div>
+
+          {/* Title */}
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">Item Title</label>
-            <input
-              type="text"
-              name="title"
-              required
-              placeholder="e.g. Blue Dell Laptop, Red Umbrella"
-              value={formData.title}
-              onChange={handleChange}
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800000]/20 focus:border-[#800000] transition-all"
-            />
+            <input type="text" name="title" required value={formData.title} onChange={handleChange} className="w-full px-3 py-2 bg-gray-50 border rounded-lg" />
           </div>
 
+          {/* Description */}
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-gray-700">Detailed Description</label>
-            <textarea
-              name="description"
-              rows={3}
-              required
-              placeholder="Provide specific details that help identify the item..."
-              value={formData.description}
-              onChange={handleChange}
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800000]/20 focus:border-[#800000] transition-all"
-            />
+            <label className="text-sm font-semibold text-gray-700">Description</label>
+            <textarea name="description" rows={3} required value={formData.description} onChange={handleChange} className="w-full px-3 py-2 bg-gray-50 border rounded-lg" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Location & Date */}
+          <div className="grid grid-cols-2 gap-6">
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-gray-700">Location</label>
-              <input
-                type="text"
-                name="location"
-                required
-                placeholder="e.g. Science Lecture Hall 01"
-                value={formData.location}
-                onChange={handleChange}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800000]/20 focus:border-[#800000] transition-all"
-              />
+              <input type="text" name="location" required value={formData.location} onChange={handleChange} className="w-full px-3 py-2 bg-gray-50 border rounded-lg" />
             </div>
-
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-gray-700">Date</label>
-              <input
-                type="date"
-                name="date"
-                required
-                value={formData.date}
-                onChange={handleChange}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800000]/20 focus:border-[#800000] transition-all"
-              />
+              <input type="date" name="date" required value={formData.date} onChange={handleChange} className="w-full px-3 py-2 bg-gray-50 border rounded-lg" />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Contact & Image */}
+          <div className="grid grid-cols-2 gap-6">
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">Contact Number</label>
-              <input
-                type="tel"
-                name="contactNumber"
-                required
-                placeholder="07X XXX XXXX"
-                value={formData.contactNumber}
-                onChange={handleChange}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800000]/20 focus:border-[#800000] transition-all"
-              />
+              <label className="text-sm font-semibold text-gray-700">Contact</label>
+              <input type="tel" name="contactNumber" required value={formData.contactNumber} onChange={handleChange} className="w-full px-3 py-2 bg-gray-50 border rounded-lg" />
             </div>
-
-            {/* --- NEW FILE INPUT SECTION --- */}
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">Upload Image</label>
-              <input
-                type="file"
-                accept="image/*" // Only allow image files
-                onChange={handleFileChange}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800000]/20 focus:border-[#800000] transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#800000]/10 file:text-[#800000] hover:file:bg-[#800000]/20"
-              />
+              <label className="text-sm font-semibold text-gray-700">{isEditing ? 'New Image (Optional)' : 'Upload Image'}</label>
+              <input type="file" accept="image/*" onChange={handleFileChange} className="w-full px-3 py-2 bg-gray-50 border rounded-lg" />
             </div>
           </div>
 
+          {/* Buttons */}
           <div className="pt-4 flex gap-4">
-            <button
-              type="button"
-              onClick={() => navigate('/')}
-              className="flex-1 px-6 py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 px-6 py-3 rounded-xl bg-[#800000] text-white font-semibold hover:bg-[#600000] disabled:bg-gray-400 disabled:cursor-not-allowed transition-all shadow-lg shadow-[#800000]/20"
-            >
-              {isSubmitting ? (
-                <span className="flex items-center justify-center">
-                  <i className="fas fa-spinner animate-spin mr-2"></i> Submitting...
-                </span>
-              ) : 'Submit Report'}
+            <button type="button" onClick={() => navigate('/')} className="flex-1 px-6 py-3 border rounded-xl hover:bg-gray-50">Cancel</button>
+            <button type="submit" disabled={isSubmitting} className="flex-1 px-6 py-3 bg-[#800000] text-white rounded-xl hover:bg-[#600000]">
+              {isSubmitting ? 'Processing...' : (isEditing ? 'Update Item' : 'Submit Report')}
             </button>
           </div>
         </form>

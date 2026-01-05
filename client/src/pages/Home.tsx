@@ -1,33 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import { ILostFoundItem, ItemType } from '../types';
+import { useNavigate } from 'react-router-dom';
 
 const Home: React.FC = () => {
   const [items, setItems] = useState<ILostFoundItem[]>([]);
   const [filter, setFilter] = useState<'All' | ItemType>('All');
   const [loading, setLoading] = useState(true);
+  
+  // Initialize navigation hook
+  const navigate = useNavigate();
 
-  // --- NEW: Fetch Real Data from Server ---
+  // 1. Fetch Data Function
+  const fetchItems = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('http://localhost:5000/api/items');
+      const data = await response.json();
+      setItems(data);
+    } catch (error) {
+      console.error("Failed to fetch items:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchItems = async () => {
-      setLoading(true);
-      try {
-        // 1. Call the API we built
-        const response = await fetch('http://localhost:5000/api/items');
-        
-        // 2. Get the JSON data
-        const data = await response.json();
-        
-        // 3. Save it to state
-        setItems(data);
-      } catch (error) {
-        console.error("Failed to fetch items:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchItems();
   }, []);
+
+  // 2. Delete Function
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Stop click from bubbling
+    
+    if (!window.confirm("Are you sure you want to delete this item?")) return;
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/items/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setItems(prevItems => prevItems.filter(item => item._id !== id));
+        alert("Item deleted!");
+      } else {
+        alert("Failed to delete item.");
+      }
+    } catch (error) {
+      console.error("Error deleting:", error);
+    }
+  };
 
   const filteredItems = filter === 'All' 
     ? items 
@@ -70,12 +91,9 @@ const Home: React.FC = () => {
           {filteredItems.map((item) => (
             <div 
               key={item._id} 
-              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group relative"
             >
               <div className="relative h-48 overflow-hidden">
-                {/* If the image is a full URL (uploaded file), it uses that.
-                   If no image exists, it falls back to a random placeholder.
-                */}
                 <img 
                   src={item.imageUrl || 'https://picsum.photos/400/300?random=0'} 
                   alt={item.title}
@@ -89,9 +107,35 @@ const Home: React.FC = () => {
               </div>
               
               <div className="p-5 space-y-3">
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 truncate">{item.title}</h3>
-                  <span className="text-xs font-semibold text-gray-400 uppercase">{item.category}</span>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 truncate">{item.title}</h3>
+                    <span className="text-xs font-semibold text-gray-400 uppercase">{item.category}</span>
+                  </div>
+                  
+                  {/* --- BUTTON GROUP --- */}
+                  <div className="flex">
+                    {/* NEW: Edit Button */}
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/edit/${item._id}`);
+                      }}
+                      className="text-gray-400 hover:text-blue-600 transition-colors p-1 bg-gray-50 rounded-full h-8 w-8 flex items-center justify-center hover:bg-blue-50 mr-2"
+                      title="Edit Item"
+                    >
+                      <i className="fas fa-pen"></i>
+                    </button>
+
+                    {/* Delete Button */}
+                    <button 
+                      onClick={(e) => handleDelete(item._id, e)}
+                      className="text-gray-400 hover:text-red-600 transition-colors p-1 bg-gray-50 rounded-full h-8 w-8 flex items-center justify-center hover:bg-red-50"
+                      title="Delete Item"
+                    >
+                      <i className="fas fa-trash-alt"></i>
+                    </button>
+                  </div>
                 </div>
                 
                 <p className="text-gray-600 text-sm line-clamp-2 min-h-[2.5rem]">
