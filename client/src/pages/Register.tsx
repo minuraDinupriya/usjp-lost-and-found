@@ -18,8 +18,23 @@ const Register: React.FC = () => {
       const data = await response.json();
 
       if (response.ok) {
-        Swal.fire('Success', 'Account created! Please login.', 'success');
-        navigate('/login');
+        // 1. AUTO-LOGIN: Save the credentials immediately
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('username', data.username);
+        localStorage.setItem('userId', data.userId);
+
+        // 2. Success Popup
+        await Swal.fire({
+          title: 'Welcome!',
+          text: 'Account created successfully. You are now logged in.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false
+        });
+
+        // 3. Go straight to Home (and refresh to update Navbar)
+        navigate('/');
+        window.location.reload();
       } else {
         Swal.fire('Error', data.message || 'Registration failed', 'error');
       }
@@ -52,7 +67,7 @@ const Register: React.FC = () => {
             />
           </div>
           <button type="submit" className="w-full bg-[#800000] text-white font-bold py-3 rounded-xl hover:bg-[#600000] transition-colors shadow-lg shadow-[#800000]/20">
-            Sign Up
+            Sign Up & Auto Login
           </button>
         </form>
         <p className="mt-4 text-center text-gray-600">

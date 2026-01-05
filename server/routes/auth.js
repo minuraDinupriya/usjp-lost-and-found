@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 
 const SECRET_KEY = 'my_super_secret_key_123'; // In a real app, put this in .env
 
-// 1. REGISTER
+// 1. REGISTER (Updated with Auto-Login)
 router.post('/register', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -22,7 +22,17 @@ router.post('/register', async (req, res) => {
     const newUser = new User({ username, password: hashedPassword });
     await newUser.save();
 
-    res.status(201).json({ message: 'User created successfully' });
+    // --- NEW: Generate Token immediately (Auto-Login) ---
+    const token = jwt.sign({ id: newUser._id, username: newUser.username }, SECRET_KEY, { expiresIn: '1h' });
+
+    // Send the Token back to the user
+    res.status(201).json({ 
+        message: 'User created successfully',
+        token, 
+        username: newUser.username, 
+        userId: newUser._id 
+    });
+
   } catch (error) {
     res.status(500).json({ message: 'Error registering user', error });
   }
