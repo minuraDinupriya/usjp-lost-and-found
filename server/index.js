@@ -16,6 +16,12 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads')); 
 
+// --- NEW: Request Logger ---
+app.use((req, res, next) => {
+  console.log(`📢 [${new Date().toLocaleTimeString()}] ${req.method} request to ${req.url}`);
+  next(); // This tells Express to keep going to the real route
+});
+
 // --- MULTER SETUP ---
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {

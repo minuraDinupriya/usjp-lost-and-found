@@ -116,10 +116,10 @@ const Home: React.FC = () => {
             >
               <div className="relative h-48 overflow-hidden">
                 <img 
-                  src={item.imageUrl || 'https://picsum.photos/400/300?random=0'} 
-                  alt={item.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+  src={item.imageUrl || 'https://placehold.co/600x400/EEE/31343C?font=lato&text=No+Image+Available'} 
+  alt={item.title}
+  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+/>
                 <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
                   item.type === ItemType.LOST ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
                 }`}>
