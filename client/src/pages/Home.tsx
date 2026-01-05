@@ -249,25 +249,40 @@ const Home: React.FC = () => {
                   </div>
 
                   {/* CONTACT INFO */}
-                  <div className="mt-3 space-y-2">
-                    <div className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg border border-gray-100 select-all">
-                      <div className="flex items-center">
-                        <i className="fas fa-phone-alt w-4 text-gray-400"></i>
-                        <span className="ml-2 font-bold text-gray-700 text-sm">{item.contactNumber}</span>
-                      </div>
-                      <span className="text-[10px] uppercase font-semibold text-gray-400">Call</span>
-                    </div>
-
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    {/* WhatsApp Button */}
                     <a 
                       href={`https://wa.me/${formatPhoneNumber(item.contactNumber)}`}
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center w-full py-2 bg-[#25D366] text-white rounded-lg hover:bg-[#1da851] transition-colors font-bold gap-2 shadow-sm"
+                      className="col-span-1 flex items-center justify-center py-2 bg-[#25D366] text-white rounded-lg hover:bg-[#1da851] text-xs font-bold gap-1 shadow-sm"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <i className="fab fa-whatsapp text-lg"></i>
-                      <span>Chat on WhatsApp</span>
+                      <i className="fab fa-whatsapp text-sm"></i>
+                      <span>WhatsApp</span>
                     </a>
+
+                    {/* Live Chat Button (Only for Logged In users) */}
+                    {isLoggedIn ? (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/chat/${item._id}`);
+                        }}
+                        className="col-span-1 flex items-center justify-center py-2 bg-[#800000] text-white rounded-lg hover:bg-[#600000] text-xs font-bold gap-1 shadow-sm"
+                      >
+                        <i className="fas fa-comments text-sm"></i>
+                        <span>Live Chat</span>
+                      </button>
+                    ) : (
+                      <button 
+                         disabled
+                         className="col-span-1 flex items-center justify-center py-2 bg-gray-200 text-gray-400 rounded-lg text-xs font-bold gap-1 cursor-not-allowed"
+                      >
+                        <i className="fas fa-lock text-sm"></i>
+                        <span>Login to Chat</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

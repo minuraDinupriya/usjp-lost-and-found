@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import PostItem from './pages/PostItem';
 import Login from './pages/Login';       // <--- Import Login
 import Register from './pages/Register'; // <--- Import Register
+import Chat from './pages/Chat';
 
 const App: React.FC = () => {
   return (
@@ -18,6 +19,7 @@ const App: React.FC = () => {
             <Route path="/edit/:id" element={<PostItem />} />
             <Route path="/login" element={<Login />} />       {/* <--- Add Route */}
             <Route path="/register" element={<Register />} /> {/* <--- Add Route */}
+            <Route path="/chat/:id" element={<Chat />} /> {/* <--- New Route */}
           </Routes>
         </main>
       </div>
