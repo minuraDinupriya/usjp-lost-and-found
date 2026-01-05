@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { ILostFoundItem, ItemType } from '../types';
 import { useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 const Home: React.FC = () => {
   const [items, setItems] = useState<ILostFoundItem[]>([]);
   const [filter, setFilter] = useState<'All' | ItemType>('All');
   const [loading, setLoading] = useState(true);
-  
-  // 1. NEW: State for Search Query
   const [searchQuery, setSearchQuery] = useState('');
-
+  
   const navigate = useNavigate();
 
   const fetchItems = async () => {
@@ -30,22 +28,22 @@ const Home: React.FC = () => {
     fetchItems();
   }, []);
 
-// 2. Delete Function (Now with SweetAlert!)
+  // --- SWEET ALERT DELETE FUNCTION ---
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation(); 
     
-    // Show the custom confirmation popup
+    // 1. Show Confirmation Popup
     const result = await Swal.fire({
       title: 'Are you sure?',
       text: "You won't be able to revert this!",
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#800000', // Matches your theme color
+      confirmButtonColor: '#800000',
       cancelButtonColor: '#d33',
       confirmButtonText: 'Yes, delete it!'
     });
 
-    // If user clicked "Yes"
+    // 2. If User Clicked "Yes"
     if (result.isConfirmed) {
       try {
         const response = await fetch(`http://localhost:5000/api/items/${id}`, {
@@ -53,25 +51,37 @@ const Home: React.FC = () => {
         });
 
         if (response.ok) {
+          // Remove item from screen
           setItems(prevItems => prevItems.filter(item => item._id !== id));
-          // Success Popup
-          Swal.fire(
-            'Deleted!',
-            'Your item has been deleted.',
-            'success'
-          );
+          
+          // 3. Show Success Popup
+          Swal.fire({
+            title: 'Deleted!',
+            text: 'The item has been removed.',
+            icon: 'success',
+            confirmButtonColor: '#800000'
+          });
         } else {
-          Swal.fire('Error', 'Failed to delete item.', 'error');
+          // Show Error Popup
+          Swal.fire({
+            title: 'Error!',
+            text: 'Failed to delete the item.',
+            icon: 'error',
+            confirmButtonColor: '#800000'
+          });
         }
       } catch (error) {
         console.error("Error deleting:", error);
-        Swal.fire('Error', 'Something went wrong.', 'error');
+        Swal.fire({
+          title: 'Error!',
+          text: 'Something went wrong. Please try again.',
+          icon: 'error',
+          confirmButtonColor: '#800000'
+        });
       }
     }
   };
 
-  // 2. UPDATED: Smart Filtering Logic
-  // It checks: Does the item match the Category? AND Does it match the Search Text?
   const filteredItems = items.filter(item => {
     const matchesCategory = filter === 'All' || item.type === filter;
     const matchesSearch = 
@@ -92,7 +102,7 @@ const Home: React.FC = () => {
           A dedicated portal for the USJP community to help reconnect lost belongings with their owners.
         </p>
 
-        {/* 3. NEW: Search Bar */}
+        {/* Search Bar */}
         <div className="max-w-md mx-auto mt-6 relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <i className="fas fa-search text-gray-400"></i>
@@ -137,10 +147,10 @@ const Home: React.FC = () => {
             >
               <div className="relative h-48 overflow-hidden">
                 <img 
-  src={item.imageUrl || 'https://placehold.co/600x400/EEE/31343C?font=lato&text=No+Image+Available'} 
-  alt={item.title}
-  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-/>
+                  src={item.imageUrl || 'https://placehold.co/600x400/EEE/31343C?font=lato&text=No+Image+Available'} 
+                  alt={item.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
                 <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
                   item.type === ItemType.LOST ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
                 }`}>
@@ -155,7 +165,6 @@ const Home: React.FC = () => {
                     <span className="text-xs font-semibold text-gray-400 uppercase">{item.category}</span>
                   </div>
                   
-                  {/* Button Group */}
                   <div className="flex">
                     <button 
                       onClick={(e) => {

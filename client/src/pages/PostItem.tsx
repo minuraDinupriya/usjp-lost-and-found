@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ItemType } from '../types';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 const PostItem: React.FC = () => {
   const navigate = useNavigate();
-  const { id } = useParams(); // Check URL for ID
-  const isEditing = Boolean(id); // True if we are editing
+  const { id } = useParams(); 
+  const isEditing = Boolean(id); 
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -20,7 +21,6 @@ const PostItem: React.FC = () => {
     contactNumber: '',
   });
 
-  // If editing, fetch the existing data
   useEffect(() => {
     if (isEditing) {
       const fetchItem = async () => {
@@ -77,7 +77,6 @@ const PostItem: React.FC = () => {
         data.append('image', selectedFile);
       }
 
-      // DECISION: Are we Creating (POST) or Updating (PUT)?
       const url = isEditing 
         ? `http://localhost:5000/api/items/${id}` 
         : 'http://localhost:5000/api/items';
@@ -90,15 +89,35 @@ const PostItem: React.FC = () => {
       });
 
       if (response.ok) {
-        alert(isEditing ? 'Item updated!' : 'Item reported!');
+        // --- SWEET ALERT SUCCESS ---
+        await Swal.fire({
+          title: 'Success!',
+          text: isEditing ? 'Item updated successfully!' : 'Item reported successfully!',
+          icon: 'success',
+          confirmButtonColor: '#800000',
+          timer: 2000,
+          timerProgressBar: true
+        });
         navigate('/');
       } else {
-        alert('Failed to save. Server error.');
+        // --- SWEET ALERT SERVER ERROR ---
+        Swal.fire({
+          title: 'Error!',
+          text: 'Failed to save item. Server rejected the data.',
+          icon: 'error',
+          confirmButtonColor: '#800000'
+        });
       }
 
     } catch (error) {
       console.error("Error:", error);
-      alert('Error submitting form.');
+      // --- SWEET ALERT NETWORK ERROR ---
+      Swal.fire({
+        title: 'Oops!',
+        text: 'Something went wrong. Check your connection.',
+        icon: 'error',
+        confirmButtonColor: '#800000'
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -116,22 +135,20 @@ const PostItem: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Status */}
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">Status</label>
             <div className="flex gap-4">
-              <label className="flex items-center space-x-2">
+              <label className="flex items-center space-x-2 cursor-pointer">
                 <input type="radio" name="type" value={ItemType.LOST} checked={formData.type === ItemType.LOST} onChange={handleChange} />
                 <span>Lost Item</span>
               </label>
-              <label className="flex items-center space-x-2">
+              <label className="flex items-center space-x-2 cursor-pointer">
                 <input type="radio" name="type" value={ItemType.FOUND} checked={formData.type === ItemType.FOUND} onChange={handleChange} />
                 <span>Found Item</span>
               </label>
             </div>
           </div>
 
-          {/* Category */}
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">Category</label>
             <select name="category" required value={formData.category} onChange={handleChange} className="w-full px-3 py-2 bg-gray-50 border rounded-lg">
@@ -140,19 +157,16 @@ const PostItem: React.FC = () => {
             </select>
           </div>
 
-          {/* Title */}
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">Item Title</label>
             <input type="text" name="title" required value={formData.title} onChange={handleChange} className="w-full px-3 py-2 bg-gray-50 border rounded-lg" />
           </div>
 
-          {/* Description */}
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">Description</label>
             <textarea name="description" rows={3} required value={formData.description} onChange={handleChange} className="w-full px-3 py-2 bg-gray-50 border rounded-lg" />
           </div>
 
-          {/* Location & Date */}
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-gray-700">Location</label>
@@ -164,7 +178,6 @@ const PostItem: React.FC = () => {
             </div>
           </div>
 
-          {/* Contact & Image */}
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-gray-700">Contact</label>
@@ -176,7 +189,6 @@ const PostItem: React.FC = () => {
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="pt-4 flex gap-4">
             <button type="button" onClick={() => navigate('/')} className="flex-1 px-6 py-3 border rounded-xl hover:bg-gray-50">Cancel</button>
             <button type="submit" disabled={isSubmitting} className="flex-1 px-6 py-3 bg-[#800000] text-white rounded-xl hover:bg-[#600000]">
