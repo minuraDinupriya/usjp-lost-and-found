@@ -1,7 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { ILostFoundItem, ItemType } from '../types';
 import { useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2'; // Import SweetAlert2
+import Swal from 'sweetalert2';
+
+// Helper: Format phone number for WhatsApp API
+const formatPhoneNumber = (phone: string) => {
+  // 1. Remove all non-numeric characters (spaces, dashes, brackets)
+  let cleaned = phone.replace(/\D/g, '');
+
+  // 2. Check if it starts with '0' (Standard SL local number like 077...)
+  if (cleaned.startsWith('0')) {
+    // Remove the '0' and add '94'
+    cleaned = '94' + cleaned.substring(1);
+  }
+
+  // 3. (Optional) If it doesn't start with 94 or 0, it might be incomplete, 
+  // but we return it anyway just in case they typed 94... already.
+  return cleaned;
+};
 
 const Home: React.FC = () => {
   const [items, setItems] = useState<ILostFoundItem[]>([]);
@@ -11,6 +27,7 @@ const Home: React.FC = () => {
   
   const navigate = useNavigate();
 
+  // 1. Fetch Data
   const fetchItems = async () => {
     setLoading(true);
     try {
@@ -28,11 +45,10 @@ const Home: React.FC = () => {
     fetchItems();
   }, []);
 
-  // --- SWEET ALERT DELETE FUNCTION ---
+  // 2. Delete with SweetAlert
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation(); 
     
-    // 1. Show Confirmation Popup
     const result = await Swal.fire({
       title: 'Are you sure?',
       text: "You won't be able to revert this!",
@@ -43,7 +59,6 @@ const Home: React.FC = () => {
       confirmButtonText: 'Yes, delete it!'
     });
 
-    // 2. If User Clicked "Yes"
     if (result.isConfirmed) {
       try {
         const response = await fetch(`http://localhost:5000/api/items/${id}`, {
@@ -51,37 +66,19 @@ const Home: React.FC = () => {
         });
 
         if (response.ok) {
-          // Remove item from screen
           setItems(prevItems => prevItems.filter(item => item._id !== id));
-          
-          // 3. Show Success Popup
-          Swal.fire({
-            title: 'Deleted!',
-            text: 'The item has been removed.',
-            icon: 'success',
-            confirmButtonColor: '#800000'
-          });
+          Swal.fire('Deleted!', 'The item has been removed.', 'success');
         } else {
-          // Show Error Popup
-          Swal.fire({
-            title: 'Error!',
-            text: 'Failed to delete the item.',
-            icon: 'error',
-            confirmButtonColor: '#800000'
-          });
+          Swal.fire('Error!', 'Failed to delete the item.', 'error');
         }
       } catch (error) {
         console.error("Error deleting:", error);
-        Swal.fire({
-          title: 'Error!',
-          text: 'Something went wrong. Please try again.',
-          icon: 'error',
-          confirmButtonColor: '#800000'
-        });
+        Swal.fire('Error!', 'Something went wrong.', 'error');
       }
     }
   };
 
+  // 3. Filter Logic (Category + Search Text)
   const filteredItems = items.filter(item => {
     const matchesCategory = filter === 'All' || item.type === filter;
     const matchesSearch = 
@@ -94,6 +91,7 @@ const Home: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-fadeIn">
+      {/* Header Section */}
       <header className="text-center space-y-4">
         <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
           Recently <span className="text-[#800000]">Lost & Found</span>
@@ -134,6 +132,7 @@ const Home: React.FC = () => {
         ))}
       </div>
 
+      {/* Cards Grid */}
       {loading ? (
         <div className="flex justify-center items-center py-20">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#800000]"></div>
@@ -143,9 +142,10 @@ const Home: React.FC = () => {
           {filteredItems.map((item) => (
             <div 
               key={item._id} 
-              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group relative"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group relative flex flex-col"
             >
-              <div className="relative h-48 overflow-hidden">
+              {/* Image Section */}
+              <div className="relative h-48 overflow-hidden shrink-0">
                 <img 
                   src={item.imageUrl || 'https://placehold.co/600x400/EEE/31343C?font=lato&text=No+Image+Available'} 
                   alt={item.title}
@@ -158,14 +158,16 @@ const Home: React.FC = () => {
                 </div>
               </div>
               
-              <div className="p-5 space-y-3">
+              {/* Content Section */}
+              <div className="p-5 flex flex-col flex-grow space-y-3">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-lg font-bold text-gray-900 truncate">{item.title}</h3>
                     <span className="text-xs font-semibold text-gray-400 uppercase">{item.category}</span>
                   </div>
                   
-                  <div className="flex">
+                  {/* Action Buttons (Edit/Delete) */}
+                  <div className="flex shrink-0">
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
@@ -191,7 +193,8 @@ const Home: React.FC = () => {
                   {item.description}
                 </p>
                 
-                <div className="pt-4 border-t border-gray-50 flex flex-col space-y-1.5 text-xs text-gray-500">
+                {/* Footer Info */}
+                <div className="pt-4 mt-auto border-t border-gray-50 flex flex-col space-y-2 text-xs text-gray-500">
                   <div className="flex items-center">
                     <i className="fas fa-map-marker-alt w-4 text-[#800000]"></i>
                     <span className="ml-2 truncate">{item.location}</span>
@@ -200,10 +203,33 @@ const Home: React.FC = () => {
                     <i className="fas fa-calendar-alt w-4 text-[#800000]"></i>
                     <span className="ml-2">{item.date}</span>
                   </div>
-                  <div className="flex items-center">
-                    <i className="fas fa-phone-alt w-4 text-[#800000]"></i>
-                    <span className="ml-2 font-medium text-gray-700">{item.contactNumber}</span>
+
+                  {/* CONTACT SECTION (Phone + WhatsApp) */}
+                  <div className="mt-3 space-y-2">
+                    {/* 1. Phone Display */}
+                    <div className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg border border-gray-100 select-all">
+                      <div className="flex items-center">
+                        <i className="fas fa-phone-alt w-4 text-gray-400"></i>
+                        <span className="ml-2 font-bold text-gray-700 text-sm">
+                          {item.contactNumber}
+                        </span>
+                      </div>
+                      <span className="text-[10px] uppercase font-semibold text-gray-400">Call</span>
+                    </div>
+
+                    {/* 2. WhatsApp Button */}
+                    <a 
+                      href={`https://wa.me/${formatPhoneNumber(item.contactNumber)}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center w-full py-2 bg-[#25D366] text-white rounded-lg hover:bg-[#1da851] transition-colors font-bold gap-2 shadow-sm"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <i className="fab fa-whatsapp text-lg"></i>
+                      <span>Chat on WhatsApp</span>
+                    </a>
                   </div>
+
                 </div>
               </div>
             </div>
