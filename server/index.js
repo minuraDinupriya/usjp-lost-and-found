@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const multer = require('multer');
 const path = require('path');
 const Item = require('./models/Item');
+const authRoutes = require('./routes/auth');
 
 // Configuration
 dotenv.config();
@@ -15,6 +16,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads')); 
+app.use('/api/auth', authRoutes);
 
 // --- NEW: Request Logger ---
 app.use((req, res, next) => {
