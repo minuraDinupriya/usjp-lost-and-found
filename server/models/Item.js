@@ -1,4 +1,3 @@
-
 const mongoose = require('mongoose');
 
 const ItemSchema = new mongoose.Schema({
@@ -35,7 +34,18 @@ const ItemSchema = new mongoose.Schema({
   imageUrl: {
     type: String,
     default: ''
+  },
+  
+  // --- NEW FIELDS ADDED ---
+  status: { 
+    type: String, 
+    default: 'Available' // Keeps track if item is Solved/Claimed
+  },
+  createdBy: { 
+    type: String, 
+    required: true       // Stores the User ID so we know who owns it
   }
+  
 }, { timestamps: true });
 
 module.exports = mongoose.model('Item', ItemSchema);

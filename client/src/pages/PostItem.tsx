@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ItemType } from '../types';
-import Swal from 'sweetalert2'; // Import SweetAlert2
+import Swal from 'sweetalert2';
 
 const PostItem: React.FC = () => {
   const navigate = useNavigate();
@@ -83,13 +83,18 @@ const PostItem: React.FC = () => {
       
       const method = isEditing ? 'PUT' : 'POST';
 
+      // --- NEW: Add Token Header ---
+      const token = localStorage.getItem('token'); 
+      
       const response = await fetch(url, {
         method: method,
+        headers: {
+            'Authorization': `Bearer ${token}` // <--- IMPORTANT!
+        },
         body: data,
       });
 
       if (response.ok) {
-        // --- SWEET ALERT SUCCESS ---
         await Swal.fire({
           title: 'Success!',
           text: isEditing ? 'Item updated successfully!' : 'Item reported successfully!',
@@ -100,10 +105,9 @@ const PostItem: React.FC = () => {
         });
         navigate('/');
       } else {
-        // --- SWEET ALERT SERVER ERROR ---
         Swal.fire({
           title: 'Error!',
-          text: 'Failed to save item. Server rejected the data.',
+          text: 'Failed to save item. You might not be logged in.',
           icon: 'error',
           confirmButtonColor: '#800000'
         });
@@ -111,7 +115,6 @@ const PostItem: React.FC = () => {
 
     } catch (error) {
       console.error("Error:", error);
-      // --- SWEET ALERT NETWORK ERROR ---
       Swal.fire({
         title: 'Oops!',
         text: 'Something went wrong. Check your connection.',

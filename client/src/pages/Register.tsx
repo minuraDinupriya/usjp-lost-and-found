@@ -67,7 +67,7 @@ const Register: React.FC = () => {
             />
           </div>
           <button type="submit" className="w-full bg-[#800000] text-white font-bold py-3 rounded-xl hover:bg-[#600000] transition-colors shadow-lg shadow-[#800000]/20">
-            Sign Up & Auto Login
+            Sign Up
           </button>
         </form>
         <p className="mt-4 text-center text-gray-600">
