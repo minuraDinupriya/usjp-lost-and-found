@@ -5,11 +5,11 @@ const dotenv = require('dotenv');
 const multer = require('multer');
 const path = require('path');
 const jwt = require('jsonwebtoken');
-const http = require('http');            // <--- NEW
-const { Server } = require('socket.io'); // <--- NEW
+const http = require('http');          
+const { Server } = require('socket.io');
 const Item = require('./models/Item');
 const authRoutes = require('./routes/auth');
-const Message = require('./models/Message'); // <--- ADD THIS
+const Message = require('./models/Message');
 
 dotenv.config();
 const app = express();
@@ -18,10 +18,10 @@ const PORT = process.env.PORT || 5000;
 // 1. Create HTTP Server
 const server = http.createServer(app);
 
-// 2. Initialize Socket.io (Updated for Debugging)
+// 2. Initialize Socket.io
 const io = new Server(server, {
   cors: {
-    origin: "*", // <--- ALLOW EVERYONE (Fixes connection issues)
+    origin: "*", 
     methods: ["GET", "POST"]
   }
 });
@@ -98,7 +98,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// --- API ROUTES (Kept exactly as they were) ---
+// --- API ROUTES ---
 
 app.get('/api/items', async (req, res) => {
   try {
@@ -153,7 +153,7 @@ app.patch('/api/items/:id/claim', verifyToken, async (req, res) => {
   } catch (error) { res.status(500).json({ message: 'Error updating status' }); }
 });
 
-// START SERVER (Use server.listen)
+// START SERVER
 server.listen(PORT, () => {
   console.log(`🚀 Server (HTTP + Socket) running on http://localhost:${PORT}`);
 });

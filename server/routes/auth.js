@@ -4,9 +4,9 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const SECRET_KEY = 'my_super_secret_key_123'; // In a real app, put this in .env
+const SECRET_KEY = 'my_super_secret_key_123';
 
-// 1. REGISTER (Updated with Auto-Login)
+// 1. REGISTER
 router.post('/register', async (req, res) => {
   try {
     const { username, password } = req.body;

@@ -3,8 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import PostItem from './pages/PostItem';
-import Login from './pages/Login';       // <--- Import Login
-import Register from './pages/Register'; // <--- Import Register
+import Login from './pages/Login';
+import Register from './pages/Register';
 import Chat from './pages/Chat';
 
 const App: React.FC = () => {
@@ -17,9 +17,9 @@ const App: React.FC = () => {
             <Route path="/" element={<Home />} />
             <Route path="/post" element={<PostItem />} />
             <Route path="/edit/:id" element={<PostItem />} />
-            <Route path="/login" element={<Login />} />       {/* <--- Add Route */}
-            <Route path="/register" element={<Register />} /> {/* <--- Add Route */}
-            <Route path="/chat/:id" element={<Chat />} /> {/* <--- New Route */}
+            <Route path="/login" element={<Login />} /> 
+            <Route path="/register" element={<Register />} />
+            <Route path="/chat/:id" element={<Chat />} />
           </Routes>
         </main>
       </div>

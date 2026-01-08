@@ -35,15 +35,14 @@ const ItemSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-  
-  // --- NEW FIELDS ADDED ---
+
   status: { 
     type: String, 
-    default: 'Available' // Keeps track if item is Solved/Claimed
+    default: 'Available'
   },
   createdBy: { 
     type: String, 
-    required: true       // Stores the User ID so we know who owns it
+    required: true
   }
   
 }, { timestamps: true });
